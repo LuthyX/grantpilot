@@ -29,14 +29,27 @@ export default function Dashboard() {
   const handleDelete = async (e: React.MouseEvent, appId: string) => {
     e.stopPropagation()
     if (!confirm('Delete this application? This cannot be undone.')) return
+    const app = applications.find(a => a.id === appId)
+    const sectionsCompleted = getSectionCount(app?.sections)
     setDeletingId(appId)
     await supabase.from('applications').delete().eq('id', appId)
+    if (typeof pendo !== 'undefined') {
+      pendo.track('application_deleted', {
+        application_id: appId,
+        grant_name: app?.grants?.name || 'unknown',
+        sections_completed: sectionsCompleted,
+        was_complete: sectionsCompleted === 8
+      })
+    }
     setApplications(prev => prev.filter(a => a.id !== appId))
     setDeletingId(null)
   }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+    if (typeof pendo !== 'undefined') {
+      pendo.track('user_signed_out')
+    }
     router.push('/auth')
   }
 

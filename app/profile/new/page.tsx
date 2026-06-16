@@ -53,6 +53,15 @@ export default function NewProfile() {
       funding_use: answers.funding_use
     }).select().single()
     if (dbError) { setError(dbError.message); setLoading(false); return }
+    if (typeof pendo !== 'undefined') {
+      pendo.track('business_profile_created', {
+        business_name: answers.business_name,
+        country: answers.country,
+        sector: answers.sector,
+        stage: answers.stage,
+        steps_completed: steps.length
+      })
+    }
     router.push(`/apply/${data.id}`)
   }
 

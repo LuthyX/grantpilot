@@ -73,13 +73,25 @@ export default function ApplicationPage({ params }: { params: { id: string } }) 
       }
     })
 
+    const fileName = `${profile.business_name}-${grant.name}-application.txt`
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${profile.business_name}-${grant.name}-application.txt`
+    a.download = fileName
     a.click()
     URL.revokeObjectURL(url)
+
+    if (typeof pendo !== 'undefined') {
+      pendo.track('application_downloaded', {
+        file_format: 'txt',
+        business_name: profile.business_name,
+        grant_name: grant.name,
+        section_count: sections.filter(s => application.sections?.[s.key]).length,
+        average_score: averageScore,
+        file_name: fileName
+      })
+    }
   }
 
   const handleDownloadHTML = () => {
@@ -132,13 +144,26 @@ export default function ApplicationPage({ params }: { params: { id: string } }) 
 </body>
 </html>`
 
+    const fileName = `${profile.business_name}-${grant.name}-application.html`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${profile.business_name}-${grant.name}-application.html`
+    a.download = fileName
     a.click()
     URL.revokeObjectURL(url)
+
+    if (typeof pendo !== 'undefined') {
+      pendo.track('application_downloaded', {
+        file_format: 'html',
+        business_name: profile.business_name,
+        grant_name: grant.name,
+        section_count: sections.filter(s => application.sections?.[s.key]).length,
+        average_score: averageScore,
+        file_name: fileName
+      })
+    }
+
     setDownloading(false)
   }
 

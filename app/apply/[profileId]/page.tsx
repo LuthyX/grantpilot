@@ -133,6 +133,16 @@ export default function ApplyPage({ params }: { params: { profileId: string } })
       return
     }
 
+    const grantInfo = grants.find(g => g.slug === grantSlug)
+    if (typeof pendo !== 'undefined') {
+      pendo.track('grant_application_started', {
+        grant_slug: grantSlug,
+        grant_name: grantInfo?.name || grantSlug,
+        grant_amount: grantInfo?.amount || 'unknown',
+        profile_id: params.profileId
+      })
+    }
+
     router.push(`/generate/${application.id}`)
   }
 
