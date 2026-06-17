@@ -102,12 +102,25 @@ export default function GeneratePage({ params }: { params: { applicationId: stri
         return
       }
 
+      const isRegeneration = !!generatedSections[sectionKey]
       const newSections = { ...generatedSections, [sectionKey]: data.content }
       const newScores = { ...scores, [sectionKey]: data.score }
 
       setGeneratedSections(newSections)
       setScores(newScores)
       setEditContent(data.content)
+
+      if (typeof window !== 'undefined' && window.pendo) {
+        const sectionInfo = sections.find(s => s.key === sectionKey)
+        pendo.track('section_generated', {
+          section_key: sectionKey,
+          section_label: sectionInfo?.label || sectionKey,
+          grant_slug: grant.slug,
+          score: data.score,
+          content_length: data.content?.length || 0,
+          is_regeneration: isRegeneration,
+        })
+      }
 
       // Save to Supabase
       await supabase
@@ -126,6 +139,16 @@ export default function GeneratePage({ params }: { params: { applicationId: stri
     const newSections = { ...generatedSections, [activeSection]: editContent }
     setGeneratedSections(newSections)
     setEditMode(false)
+
+    if (typeof window !== 'undefined' && window.pendo) {
+      const sectionInfo = sections.find(s => s.key === activeSection)
+      pendo.track('section_edited', {
+        section_key: activeSection,
+        section_label: sectionInfo?.label || activeSection,
+        content_length: editContent?.length || 0,
+        application_id: params.applicationId,
+      })
+    }
 
     await supabase
       .from('applications')
@@ -375,6 +398,24 @@ export default function GeneratePage({ params }: { params: { applicationId: stri
                     .from('applications')
                     .update({ sections: allSections, scores: allScores })
                     .eq('id', params.applicationId)
+
+                    const generatedCount = Object.keys(allSections).length
+                    const failedCount = sections.length - generatedCount
+                    const scoreValues = Object.values(allScores)
+                    const avgScore = scoreValues.length > 0
+                      ? Math.round(scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length)
+                      : 0
+
+                    if (typeof window !== 'undefined' && window.pendo) {
+                      pendo.track('all_sections_generated', {
+                        grant_slug: grant.slug,
+                        grant_name: grant.name,
+                        sections_generated_count: generatedCount,
+                        sections_failed_count: failedCount,
+                        average_score: avgScore,
+                        application_id: params.applicationId,
+                      })
+                    }
 
                     setGenerating(false)
                 }}

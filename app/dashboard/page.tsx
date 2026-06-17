@@ -31,6 +31,13 @@ export default function Dashboard() {
     if (!confirm('Delete this application? This cannot be undone.')) return
     setDeletingId(appId)
     await supabase.from('applications').delete().eq('id', appId)
+
+    if (typeof window !== 'undefined' && window.pendo) {
+      pendo.track('application_deleted', {
+        application_id: appId,
+      })
+    }
+
     setApplications(prev => prev.filter(a => a.id !== appId))
     setDeletingId(null)
   }

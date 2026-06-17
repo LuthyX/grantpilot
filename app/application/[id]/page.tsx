@@ -53,6 +53,14 @@ export default function ApplicationPage({ params }: { params: { id: string } }) 
     fetchData()
   }, [params.id, router])
 
+  const averageScore = application?.scores
+    ? Math.round(
+        Object.values(application.scores as Record<string, number>)
+          .reduce((a, b) => a + b, 0) /
+        Object.values(application.scores as Record<string, number>).length
+      )
+    : 0
+
   const handleDownloadText = () => {
     if (!application || !profile || !grant) return
 
@@ -72,6 +80,19 @@ export default function ApplicationPage({ params }: { params: { id: string } }) 
         content += `${text}\n\n`
       }
     })
+
+    const sectionCount = sections.filter(s => application.sections?.[s.key]).length
+
+    if (typeof window !== 'undefined' && window.pendo) {
+      pendo.track('application_exported_text', {
+        format: 'text',
+        grant_name: grant.name,
+        business_name: profile.business_name,
+        section_count: sectionCount,
+        average_score: averageScore,
+        application_id: application.id,
+      })
+    }
 
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
@@ -132,6 +153,19 @@ export default function ApplicationPage({ params }: { params: { id: string } }) 
 </body>
 </html>`
 
+    const sectionCount = sections.filter(s => application.sections?.[s.key]).length
+
+    if (typeof window !== 'undefined' && window.pendo) {
+      pendo.track('application_exported', {
+        format: 'html',
+        grant_name: grant.name,
+        business_name: profile.business_name,
+        section_count: sectionCount,
+        average_score: averageScore,
+        application_id: application.id,
+      })
+    }
+
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -141,14 +175,6 @@ export default function ApplicationPage({ params }: { params: { id: string } }) 
     URL.revokeObjectURL(url)
     setDownloading(false)
   }
-
-  const averageScore = application?.scores
-    ? Math.round(
-        Object.values(application.scores as Record<string, number>)
-          .reduce((a, b) => a + b, 0) /
-        Object.values(application.scores as Record<string, number>).length
-      )
-    : 0
 
   if (loading) {
     return (
