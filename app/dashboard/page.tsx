@@ -43,6 +43,7 @@ export default function Dashboard() {
   }
 
   const handleSignOut = async () => {
+    pendo.clearSession()
     await supabase.auth.signOut()
     router.push('/auth')
   }
