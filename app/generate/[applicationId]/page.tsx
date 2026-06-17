@@ -102,6 +102,18 @@ export default function GeneratePage({ params }: { params: { applicationId: stri
         return
       }
 
+      if (typeof pendo !== 'undefined') {
+        pendo.track('section_generated', {
+          application_id: params.applicationId,
+          section_key: sectionKey,
+          section_label: sections.find(s => s.key === sectionKey)?.label || '',
+          grant_slug: grant.slug,
+          score: data.score,
+          content_length: data.content?.length || 0,
+          is_regeneration: !!generatedSections[sectionKey]
+        })
+      }
+
       const newSections = { ...generatedSections, [sectionKey]: data.content }
       const newScores = { ...scores, [sectionKey]: data.score }
 
@@ -123,6 +135,17 @@ export default function GeneratePage({ params }: { params: { applicationId: stri
   }
 
   const saveEdit = async () => {
+    if (typeof pendo !== 'undefined') {
+      pendo.track('section_edited', {
+        application_id: params.applicationId,
+        section_key: activeSection,
+        section_label: sections.find(s => s.key === activeSection)?.label || '',
+        grant_slug: grant?.slug || '',
+        content_length_before: generatedSections[activeSection]?.length || 0,
+        content_length_after: editContent.length
+      })
+    }
+
     const newSections = { ...generatedSections, [activeSection]: editContent }
     setGeneratedSections(newSections)
     setEditMode(false)
@@ -341,6 +364,7 @@ export default function GeneratePage({ params }: { params: { applicationId: stri
                 onClick={async () => {
                     if (!profile || !grant) return
                     setGenerating(true)
+                    const startTime = Date.now()
 
                     const allSections: Record<string, string> = {}
                     const allScores: Record<string, number> = {}
@@ -375,6 +399,21 @@ export default function GeneratePage({ params }: { params: { applicationId: stri
                     .from('applications')
                     .update({ sections: allSections, scores: allScores })
                     .eq('id', params.applicationId)
+
+                    if (typeof pendo !== 'undefined') {
+                      const generatedCount = Object.keys(allSections).length
+                      const scoreValues = Object.values(allScores)
+                      pendo.track('all_sections_generated', {
+                        application_id: params.applicationId,
+                        grant_slug: grant.slug,
+                        sections_generated_count: generatedCount,
+                        sections_failed_count: sections.length - generatedCount,
+                        average_score: scoreValues.length > 0
+                          ? Math.round(scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length)
+                          : 0,
+                        total_duration_ms: Date.now() - startTime
+                      })
+                    }
 
                     setGenerating(false)
                 }}

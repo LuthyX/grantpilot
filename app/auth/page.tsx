@@ -20,11 +20,27 @@ export default function AuthPage() {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
-      else router.push('/dashboard')
+      else {
+        if (typeof pendo !== 'undefined') {
+          pendo.track('user_signed_in', {
+            auth_method: 'email_password',
+            email_domain: email.split('@')[1] || ''
+          })
+        }
+        router.push('/dashboard')
+      }
     } else {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setError(error.message)
-      else setMessage('Account created! You can now sign in.')
+      else {
+        if (typeof pendo !== 'undefined') {
+          pendo.track('user_signed_up', {
+            auth_method: 'email_password',
+            email_domain: email.split('@')[1] || ''
+          })
+        }
+        setMessage('Account created! You can now sign in.')
+      }
     }
     setLoading(false)
   }
