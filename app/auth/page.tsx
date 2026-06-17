@@ -18,9 +18,19 @@ export default function AuthPage() {
     setError('')
     setMessage('')
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) setError(error.message)
-      else router.push('/dashboard')
+      else {
+        if (data.user) {
+          pendo.identify({
+            visitor: {
+              id: data.user.id,
+              email: data.user.email || ''
+            }
+          })
+        }
+        router.push('/dashboard')
+      }
     } else {
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setError(error.message)
