@@ -33,8 +33,17 @@ export default function AuthPage() {
       }
     } else {
       const { error } = await supabase.auth.signUp({ email, password })
-      if (error) setError(error.message)
-      else setMessage('Account created! You can now sign in.')
+      if (error) {
+        setError(error.message)
+      } else {
+        if (typeof window !== 'undefined' && window.pendo) {
+          pendo.track('account_created', {
+            auth_method: 'email',
+            success: true,
+          })
+        }
+        setMessage('Account created! You can now sign in.')
+      }
     }
     setLoading(false)
   }
