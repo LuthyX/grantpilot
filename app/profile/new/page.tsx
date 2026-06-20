@@ -5,14 +5,27 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const steps = [
-  { id: 1, field: 'business_name', question: "What's your business name and what do you do?", placeholder: "e.g. SolarNaija — we provide affordable solar energy to rural households in Northern Nigeria", hint: "Give us the name and a one-liner description" },
-  { id: 2, field: 'problem', question: "What problem are you solving?", placeholder: "e.g. 80 million Nigerians have no access to reliable electricity, forcing families to spend 30% of income on generators and kerosene", hint: "Be specific — use numbers where you can" },
-  { id: 3, field: 'customers', question: "Who are your customers?", placeholder: "e.g. Rural and peri-urban households in Northern Nigeria earning $2–$10/day, primarily women-led households", hint: "Describe them specifically — demographics, location, income level" },
-  { id: 4, field: 'country', question: "What country or region do you operate in?", placeholder: "e.g. Nigeria (Kano, Kaduna, Sokoto states)", hint: "Be specific about your geography" },
-  { id: 5, field: 'sector', question: "What sector is your business in?", placeholder: "e.g. Clean Energy / Renewable Energy", hint: "e.g. Fintech, Agritech, Health, Education, Energy, Logistics, E-commerce" },
-  { id: 6, field: 'stage', question: "What stage is your business at?", placeholder: "e.g. Early revenue — we have 150 paying customers across 3 communities", hint: "Idea / Pre-revenue / Early revenue / Growth / Scaling" },
-  { id: 7, field: 'traction', question: "What traction do you have so far?", placeholder: "e.g. 150 households connected, ₦2.1M revenue in last 6 months, 3 community partnerships signed, 12 jobs created", hint: "Numbers matter here — users, revenue, impact metrics, partnerships" },
-  { id: 8, field: 'funding_use', question: "What will you use the funding for?", placeholder: "e.g. Purchase 200 additional solar kits ($3,000), hire 2 community sales agents ($1,000), working capital ($1,000)", hint: "Break it down — specific amounts and purposes" }
+  {
+    id: 1,
+    field: 'business_name',
+    question: "What's your business name?",
+    placeholder: "e.g. SolarNaija",
+    hint: "Just the name — you'll describe what you do in the next question"
+  },
+  {
+    id: 2,
+    field: 'description',
+    question: "In one sentence, what does your business do?",
+    placeholder: "e.g. We manufacture and lease affordable solar home systems to rural households in Northern Nigeria",
+    hint: "Keep it to one clear sentence"
+  },
+  { id: 3, field: 'problem', question: "What problem are you solving?", placeholder: "e.g. 80 million Nigerians have no access to reliable electricity, forcing families to spend 30% of income on generators and kerosene", hint: "Be specific — use numbers where you can" },
+  { id: 4, field: 'customers', question: "Who are your customers?", placeholder: "e.g. Rural and peri-urban households in Northern Nigeria earning $2–$10/day, primarily women-led households", hint: "Describe them specifically — demographics, location, income level" },
+  { id: 5, field: 'country', question: "What country or region do you operate in?", placeholder: "e.g. Nigeria (Kano, Kaduna, Sokoto states)", hint: "Be specific about your geography" },
+  { id: 6, field: 'sector', question: "What sector is your business in?", placeholder: "e.g. Clean Energy / Renewable Energy", hint: "e.g. Fintech, Agritech, Health, Education, Energy, Logistics, E-commerce" },
+  { id: 7, field: 'stage', question: "What stage is your business at?", placeholder: "e.g. Early revenue — we have 150 paying customers across 3 communities", hint: "Idea / Pre-revenue / Early revenue / Growth / Scaling" },
+  { id: 8, field: 'traction', question: "What traction do you have so far?", placeholder: "e.g. 150 households connected, ₦2.1M revenue in last 6 months, 3 community partnerships signed, 12 jobs created", hint: "Numbers matter here — users, revenue, impact metrics, partnerships" },
+  { id: 9, field: 'funding_use', question: "What will you use the funding for?", placeholder: "e.g. Purchase 200 additional solar kits ($3,000), hire 2 community sales agents ($1,000), working capital ($1,000)", hint: "Break it down — specific amounts and purposes" }
 ]
 
 export default function NewProfile() {
@@ -40,10 +53,12 @@ export default function NewProfile() {
     setError('')
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth'); return }
-    const { data, error: dbError } = await supabase.from('business_profiles').insert({
+    const { data, error: dbError } = await supabase
+    .from('business_profiles')
+    .insert({
       user_id: user.id,
       business_name: answers.business_name,
-      description: answers.business_name,
+      description: answers.description,  // now separate
       problem: answers.problem,
       customers: answers.customers,
       country: answers.country,
